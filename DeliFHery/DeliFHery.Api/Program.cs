@@ -48,7 +48,7 @@ if (useInMemoryDatabase)
 }
 else
 {
-    var containerHostOverride = databaseSection.GetValue("ContainerHostOverride", "host.docker.internal");
+    var containerHostOverride = databaseSection.GetValue<string?>("ContainerHostOverride") ?? "host.docker.internal";
     var preferIpv4HostAddress = databaseSection.GetValue("PreferIPv4HostAddress", true);
 
     var connectionString = builder.Configuration.GetConnectionString("DeliFHeryDb");
@@ -63,7 +63,7 @@ else
         var npgsqlBuilder = new NpgsqlConnectionStringBuilder(connectionString);
         if (ShouldRewriteLocalHost(npgsqlBuilder.Host))
         {
-            var hostToUse = ResolveContainerHost(containerHostOverride, preferIpv4HostAddress);
+            var hostToUse = ResolveContainerHost(containerHostOverride, preferIpv4HostAddress, npgsqlBuilder.Host);
             npgsqlBuilder.Host = hostToUse;
             resolvedConnectionString = npgsqlBuilder.ConnectionString;
         }
@@ -196,11 +196,11 @@ static bool ShouldRewriteLocalHost(string host)
     return false;
 }
 
-static string ResolveContainerHost(string hostOverride, bool preferIpv4)
+static string ResolveContainerHost(string? hostOverride, bool preferIpv4, string originalHost)
 {
     if (string.IsNullOrWhiteSpace(hostOverride))
     {
-        return hostOverride;
+        return originalHost;
     }
 
     if (!preferIpv4 || IPAddress.TryParse(hostOverride, out _))
