@@ -2,16 +2,15 @@ using System.Net;
 using System.Net.Http.Json;
 using DeliFHery.Api.Dtos;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
 namespace DeliFHery.Api.Tests;
 
-public class CustomersApiTests : IClassFixture<WebApplicationFactory<Program>>
+public class CustomersApiTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public CustomersApiTests(WebApplicationFactory<Program> factory)
+    public CustomersApiTests(TestWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }
