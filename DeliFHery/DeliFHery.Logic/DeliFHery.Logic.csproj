@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DeliFHery.Domain\DeliFHery.Domain.csproj" />
+    <ProjectReference Include="..\DeliFHery.Persistence\DeliFHery.Persistence.csproj" />
   </ItemGroup>
 
 </Project>
