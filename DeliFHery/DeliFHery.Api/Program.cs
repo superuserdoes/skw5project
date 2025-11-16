@@ -1,11 +1,14 @@
 using System.Text.Json.Serialization;
 using DeliFHery.Logic;
+using DeliFHery.Persistence;
+using DeliFHery.Api.Security;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
 
 builder.Services
     .AddControllers()
@@ -32,13 +35,97 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     };
 });
 
+var useInMemoryDatabase = builder.Configuration.GetValue("Database:UseInMemory", false);
+if (useInMemoryDatabase)
+{
+    builder.Services.AddDbContext<DeliFHeryDbContext>(options =>
+    {
+        options.UseInMemoryDatabase("DeliFHery");
+    });
+}
+else
+{
+    var connectionString = builder.Configuration.GetConnectionString("DeliFHeryDb");
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        throw new InvalidOperationException("A database connection string must be configured.");
+    }
+
+    var resolvedConnectionString = connectionString;
+    if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")?.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
+    {
+        var npgsqlBuilder = new NpgsqlConnectionStringBuilder(connectionString);
+        if (string.Equals(npgsqlBuilder.Host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(npgsqlBuilder.Host, "127.0.0.1", StringComparison.OrdinalIgnoreCase))
+        {
+            npgsqlBuilder.Host = "host.docker.internal";
+            resolvedConnectionString = npgsqlBuilder.ConnectionString;
+        }
+    }
+
+    builder.Services.AddDbContext<DeliFHeryDbContext>(options =>
+    {
+        options.UseNpgsql(resolvedConnectionString);
+    });
+}
+
 builder.Services.AddDeliFHeryLogic();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+var keycloakSection = builder.Configuration.GetSection(KeycloakOptions.SectionName);
+builder.Services.Configure<KeycloakOptions>(keycloakSection);
+var keycloakOptions = keycloakSection.Get<KeycloakOptions>() ?? throw new InvalidOperationException("Keycloak configuration missing");
+if (string.IsNullOrWhiteSpace(keycloakOptions.Authority) || string.IsNullOrWhiteSpace(keycloakOptions.Audience))
+{
+    throw new InvalidOperationException("Keycloak authority and audience must be configured.");
+}
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.Authority = keycloakOptions.Authority;
+        options.Audience = keycloakOptions.Audience;
+        options.RequireHttpsMetadata = keycloakOptions.RequireHttpsMetadata;
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AuthorizationPolicies.ApiUser, policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireAssertion(context =>
+        {
+            if (string.IsNullOrWhiteSpace(keycloakOptions.RequiredScope))
+            {
+                return true;
+            }
+
+            return context.User.HasScope(keycloakOptions.RequiredScope!);
+        });
+    });
+});
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DeliFHeryDbContext>();
+    if (dbContext.Database.IsRelational())
+    {
+        dbContext.Database.Migrate();
+    }
+    else
+    {
+        dbContext.Database.EnsureCreated();
+    }
+}
+
 app.UseExceptionHandler(exceptionApp =>
 {
     exceptionApp.Run(async context =>
@@ -46,8 +133,8 @@ app.UseExceptionHandler(exceptionApp =>
         var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
         var statusCode = exception switch
         {
-            ArgumentException => StatusCodes.Status400BadRequest,
             ArgumentNullException => StatusCodes.Status400BadRequest,
+            ArgumentException => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError
         };
 
@@ -74,6 +161,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
