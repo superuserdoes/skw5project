@@ -26,5 +26,5 @@ public class DeliveryRequest
 
     [Required]
     public DeliveryStatus Status { get; set; }
-        = DeliveryStatus.Scheduled;
+        = DeliveryStatus.Created;
 }
