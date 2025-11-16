@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Sockets;
 using System.Text.Json.Serialization;
 using DeliFHery.Logic;
 using DeliFHery.Persistence;
@@ -35,7 +37,8 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     };
 });
 
-var useInMemoryDatabase = builder.Configuration.GetValue("Database:UseInMemory", false);
+var databaseSection = builder.Configuration.GetSection("Database");
+var useInMemoryDatabase = databaseSection.GetValue("UseInMemory", false);
 if (useInMemoryDatabase)
 {
     builder.Services.AddDbContext<DeliFHeryDbContext>(options =>
@@ -45,6 +48,9 @@ if (useInMemoryDatabase)
 }
 else
 {
+    var containerHostOverride = databaseSection.GetValue("ContainerHostOverride", "host.docker.internal");
+    var preferIpv4HostAddress = databaseSection.GetValue("PreferIPv4HostAddress", true);
+
     var connectionString = builder.Configuration.GetConnectionString("DeliFHeryDb");
     if (string.IsNullOrWhiteSpace(connectionString))
     {
@@ -55,10 +61,10 @@ else
     if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")?.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
     {
         var npgsqlBuilder = new NpgsqlConnectionStringBuilder(connectionString);
-        if (string.Equals(npgsqlBuilder.Host, "localhost", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(npgsqlBuilder.Host, "127.0.0.1", StringComparison.OrdinalIgnoreCase))
+        if (ShouldRewriteLocalHost(npgsqlBuilder.Host))
         {
-            npgsqlBuilder.Host = "host.docker.internal";
+            var hostToUse = ResolveContainerHost(containerHostOverride, preferIpv4HostAddress);
+            npgsqlBuilder.Host = hostToUse;
             resolvedConnectionString = npgsqlBuilder.ConnectionString;
         }
     }
@@ -169,3 +175,54 @@ app.MapControllers();
 app.Run();
 
 public partial class Program;
+
+static bool ShouldRewriteLocalHost(string host)
+{
+    if (string.IsNullOrWhiteSpace(host))
+    {
+        return false;
+    }
+
+    if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase))
+    {
+        return true;
+    }
+
+    if (IPAddress.TryParse(host, out var address))
+    {
+        return IPAddress.IsLoopback(address);
+    }
+
+    return false;
+}
+
+static string ResolveContainerHost(string hostOverride, bool preferIpv4)
+{
+    if (string.IsNullOrWhiteSpace(hostOverride))
+    {
+        return hostOverride;
+    }
+
+    if (!preferIpv4 || IPAddress.TryParse(hostOverride, out _))
+    {
+        return hostOverride;
+    }
+
+    try
+    {
+        var addresses = Dns.GetHostAddresses(hostOverride);
+        foreach (var address in addresses)
+        {
+            if (address.AddressFamily == AddressFamily.InterNetwork)
+            {
+                return address.ToString();
+            }
+        }
+    }
+    catch (SocketException)
+    {
+        // ignored - fall back to the original host override value
+    }
+
+    return hostOverride;
+}
