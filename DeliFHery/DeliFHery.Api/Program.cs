@@ -174,55 +174,56 @@ app.MapControllers();
 
 app.Run();
 
-public partial class Program;
-
-static bool ShouldRewriteLocalHost(string host)
+public partial class Program
 {
-    if (string.IsNullOrWhiteSpace(host))
+    internal static bool ShouldRewriteLocalHost(string host)
     {
+        if (string.IsNullOrWhiteSpace(host))
+        {
+            return false;
+        }
+
+        if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (IPAddress.TryParse(host, out var address))
+        {
+            return IPAddress.IsLoopback(address);
+        }
+
         return false;
     }
 
-    if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase))
+    internal static string ResolveContainerHost(string? hostOverride, bool preferIpv4, string originalHost)
     {
-        return true;
-    }
-
-    if (IPAddress.TryParse(host, out var address))
-    {
-        return IPAddress.IsLoopback(address);
-    }
-
-    return false;
-}
-
-static string ResolveContainerHost(string? hostOverride, bool preferIpv4, string originalHost)
-{
-    if (string.IsNullOrWhiteSpace(hostOverride))
-    {
-        return originalHost;
-    }
-
-    if (!preferIpv4 || IPAddress.TryParse(hostOverride, out _))
-    {
-        return hostOverride;
-    }
-
-    try
-    {
-        var addresses = Dns.GetHostAddresses(hostOverride);
-        foreach (var address in addresses)
+        if (string.IsNullOrWhiteSpace(hostOverride))
         {
-            if (address.AddressFamily == AddressFamily.InterNetwork)
+            return originalHost;
+        }
+
+        if (!preferIpv4 || IPAddress.TryParse(hostOverride, out _))
+        {
+            return hostOverride;
+        }
+
+        try
+        {
+            var addresses = Dns.GetHostAddresses(hostOverride);
+            foreach (var address in addresses)
             {
-                return address.ToString();
+                if (address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return address.ToString();
+                }
             }
         }
-    }
-    catch (SocketException)
-    {
-        // ignored - fall back to the original host override value
-    }
+        catch (SocketException)
+        {
+            // ignored - fall back to the original host override value
+        }
 
-    return hostOverride;
+        return hostOverride;
+    }
 }
