@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,9 +51,21 @@ else
         throw new InvalidOperationException("A database connection string must be configured.");
     }
 
+    var resolvedConnectionString = connectionString;
+    if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")?.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
+    {
+        var npgsqlBuilder = new NpgsqlConnectionStringBuilder(connectionString);
+        if (string.Equals(npgsqlBuilder.Host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(npgsqlBuilder.Host, "127.0.0.1", StringComparison.OrdinalIgnoreCase))
+        {
+            npgsqlBuilder.Host = "host.docker.internal";
+            resolvedConnectionString = npgsqlBuilder.ConnectionString;
+        }
+    }
+
     builder.Services.AddDbContext<DeliFHeryDbContext>(options =>
     {
-        options.UseNpgsql(connectionString);
+        options.UseNpgsql(resolvedConnectionString);
     });
 }
 
