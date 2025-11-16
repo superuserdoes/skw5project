@@ -6,4 +6,7 @@
   <Project Path="DeliFHery.Api/DeliFHery.Api.csproj">
     <ProjectReference ProjectPath="DeliFHery.Logic/DeliFHery.Logic.csproj" />
   </Project>
+  <Project Path="DeliFHery.Api.Tests/DeliFHery.Api.Tests.csproj">
+    <ProjectReference ProjectPath="DeliFHery.Api/DeliFHery.Api.csproj" />
+  </Project>
 </Solution>
