@@ -5,6 +5,10 @@
   </Project>
   <Project Path="DeliFHery.Api/DeliFHery.Api.csproj">
     <ProjectReference ProjectPath="DeliFHery.Logic/DeliFHery.Logic.csproj" />
+    <ProjectReference ProjectPath="DeliFHery.Persistence/DeliFHery.Persistence.csproj" />
+  </Project>
+  <Project Path="DeliFHery.Persistence/DeliFHery.Persistence.csproj">
+    <ProjectReference ProjectPath="DeliFHery.Domain/DeliFHery.Domain.csproj" />
   </Project>
   <Project Path="DeliFHery.Api.Tests/DeliFHery.Api.Tests.csproj">
     <ProjectReference ProjectPath="DeliFHery.Api/DeliFHery.Api.csproj" />

@@ -1,12 +1,15 @@
 using DeliFHery.Api.Dtos;
 using DeliFHery.Api.Mappers;
+using DeliFHery.Api.Security;
 using DeliFHery.Logic;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DeliFHery.Api.Controllers;
 
 [ApiController]
 [Route("api/contacts")]
+[Authorize(Policy = AuthorizationPolicies.ApiUser)]
 public class ContactsController : ControllerBase
 {
     private readonly IDeliFHeryLogic _logic;
