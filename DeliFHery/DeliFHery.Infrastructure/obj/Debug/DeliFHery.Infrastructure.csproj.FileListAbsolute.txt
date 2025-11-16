@@ -1,0 +1,2 @@
+C:\projects\semester_5\SWK5\delifhery-bb-g2-harcevic\DeliFHery\DeliFHery.Infrastructure\obj\Debug\DeliFHery.Infrastructure.csproj.AssemblyReference.cache
+C:\projects\semester_5\SWK5\delifhery-bb-g2-harcevic\DeliFHery\DeliFHery.Infrastructure\obj\Debug\DeliFHery.Infrastructure.csproj.CoreCompileInputs.cache

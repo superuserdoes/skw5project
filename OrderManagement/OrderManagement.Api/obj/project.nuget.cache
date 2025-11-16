@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "lzM8Pa/c+2w=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\ortne\\OneDrive - FH OOe\\5.Semester\\SWK5UE_BB\\UE6_08112025\\OrderManagement\\OrderManagement.Api\\OrderManagement.Api.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\ortne\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.3\\microsoft.aspnetcore.openapi.9.0.3.nupkg.sha512",
+    "C:\\Users\\ortne\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
