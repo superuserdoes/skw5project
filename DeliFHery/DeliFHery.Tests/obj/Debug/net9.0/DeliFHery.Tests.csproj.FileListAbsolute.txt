@@ -1,6 +1,0 @@
-C:\projects\semester_5\SWK5\delifhery-bb-g2-harcevic\DeliFHery\DeliFHery.Tests\obj\Debug\net9.0\DeliFHery.Tests.csproj.AssemblyReference.cache
-C:\projects\semester_5\SWK5\delifhery-bb-g2-harcevic\DeliFHery\DeliFHery.Tests\obj\Debug\net9.0\DeliFHery.Tests.GeneratedMSBuildEditorConfig.editorconfig
-C:\projects\semester_5\SWK5\delifhery-bb-g2-harcevic\DeliFHery\DeliFHery.Tests\obj\Debug\net9.0\DeliFHery.Tests.AssemblyInfoInputs.cache
-C:\projects\semester_5\SWK5\delifhery-bb-g2-harcevic\DeliFHery\DeliFHery.Tests\obj\Debug\net9.0\DeliFHery.Tests.AssemblyInfo.cs
-C:\projects\semester_5\SWK5\delifhery-bb-g2-harcevic\DeliFHery\DeliFHery.Tests\obj\Debug\net9.0\DeliFHery.Tests.csproj.CoreCompileInputs.cache
-C:\projects\semester_5\SWK5\delifhery-bb-g2-harcevic\DeliFHery\DeliFHery.Tests\obj\Debug\net9.0\DeliFHery.Tests.sourcelink.json

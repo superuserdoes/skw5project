@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\projects\\semester_5\\SWK5\\delifhery-bb-g2-harcevic\\DeliFHery\\DeliFHery.Api\\DeliFHery.Api.csproj": {}
+    "C:\\projects\\semester_5\\SWK5\\PRIVATE_DO_NOT_PUSH\\skw5project\\DeliFHery\\DeliFHery.Api\\DeliFHery.Api.csproj": {}
   },
   "projects": {
-    "C:\\projects\\semester_5\\SWK5\\delifhery-bb-g2-harcevic\\DeliFHery\\DeliFHery.Api\\DeliFHery.Api.csproj": {
+    "C:\\projects\\semester_5\\SWK5\\PRIVATE_DO_NOT_PUSH\\skw5project\\DeliFHery\\DeliFHery.Api\\DeliFHery.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\projects\\semester_5\\SWK5\\delifhery-bb-g2-harcevic\\DeliFHery\\DeliFHery.Api\\DeliFHery.Api.csproj",
+        "projectUniqueName": "C:\\projects\\semester_5\\SWK5\\PRIVATE_DO_NOT_PUSH\\skw5project\\DeliFHery\\DeliFHery.Api\\DeliFHery.Api.csproj",
         "projectName": "DeliFHery.Api",
-        "projectPath": "C:\\projects\\semester_5\\SWK5\\delifhery-bb-g2-harcevic\\DeliFHery\\DeliFHery.Api\\DeliFHery.Api.csproj",
+        "projectPath": "C:\\projects\\semester_5\\SWK5\\PRIVATE_DO_NOT_PUSH\\skw5project\\DeliFHery\\DeliFHery.Api\\DeliFHery.Api.csproj",
         "packagesPath": "C:\\Users\\pc\\.nuget\\packages\\",
-        "outputPath": "C:\\projects\\semester_5\\SWK5\\delifhery-bb-g2-harcevic\\DeliFHery\\DeliFHery.Api\\obj\\",
+        "outputPath": "C:\\projects\\semester_5\\SWK5\\PRIVATE_DO_NOT_PUSH\\skw5project\\DeliFHery\\DeliFHery.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

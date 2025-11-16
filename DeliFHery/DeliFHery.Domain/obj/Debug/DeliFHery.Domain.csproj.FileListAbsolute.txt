@@ -1,2 +1,0 @@
-C:\projects\semester_5\SWK5\delifhery-bb-g2-harcevic\DeliFHery\DeliFHery.Domain\obj\Debug\DeliFHery.Domain.csproj.AssemblyReference.cache
-C:\projects\semester_5\SWK5\delifhery-bb-g2-harcevic\DeliFHery\DeliFHery.Domain\obj\Debug\DeliFHery.Domain.csproj.CoreCompileInputs.cache

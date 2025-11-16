@@ -1,6 +1,3 @@
 <Solution>
   <Project Path="DeliFHery.Api/DeliFHery.Api.csproj" />
-  <Project Path="DeliFHery.Domain/DeliFHery.Domain.csproj" Id="438b72e4-086f-473f-90b4-df725b5b1e7c" />
-  <Project Path="DeliFHery.Infrastructure/DeliFHery.Infrastructure.csproj" Id="965a416c-17ed-45e6-99f7-928aa308e439" />
-  <Project Path="DeliFHery.Tests/DeliFHery.Tests.csproj" Id="f785e8c9-2680-42d7-84f8-7b4118d51b16" />
 </Solution>

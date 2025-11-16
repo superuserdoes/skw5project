@@ -1,4 +1,4 @@
-@DeliFHery.Api_HostAddress = http://localhost:5116
+@DeliFHery.Api_HostAddress = http://localhost:5088
 
 GET {{DeliFHery.Api_HostAddress}}/weatherforecast/
 Accept: application/json

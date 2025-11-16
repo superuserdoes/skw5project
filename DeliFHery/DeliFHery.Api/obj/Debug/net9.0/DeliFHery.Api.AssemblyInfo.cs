@@ -11,11 +11,11 @@
 using System;
 using System.Reflection;
 
-[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("9a2fd7b1-d40a-4c7e-bd8f-cc5501eb4f90")]
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("67701b8e-50c7-4b57-956e-a6f04f368e1d")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("DeliFHery.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0c7b623ae12b721014af4922f34cf05f10b27613")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ddcb193778f80b12e297cff2796b5f58227bafbf")]
 [assembly: System.Reflection.AssemblyProductAttribute("DeliFHery.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DeliFHery.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
