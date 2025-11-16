@@ -1,25 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Xunit;
+using DeliFHery.Domain.Entities;
 using DeliFHery.Infrastructure.Repositories;
+using DeliFHery.Tests.Infrastructure;
 
-public class CustomerRepositoryTests
+namespace DeliFHery.Tests;
+
+public class CustomerRepositoryTests : IClassFixture<SqlServerFixture>
 {
-    private const string TestConnectionString =
-        "Server=localhost;Database=DeliFHeryTest;User Id=sa;Password=YourPassword123;TrustServerCertificate=True;";
+    private readonly SqlServerFixture _fixture;
+    private readonly CustomerRepository _repository;
+
+    public CustomerRepositoryTests(SqlServerFixture fixture)
+    {
+        _fixture = fixture;
+        _repository = new CustomerRepository(_fixture.ConnectionString);
+    }
 
     [Fact]
-    public void GetById_ReturnsNull_WhenNotExists()
+    public async Task GetById_ReturnsNull_WhenNotExists()
     {
-        var repo = new CustomerRepository(TestConnectionString);
+        await _fixture.ResetDatabaseAsync();
 
-        var result = repo.GetById(-1);
+        var result = _repository.GetById(999);
 
         Assert.Null(result);
     }
-}
 
+    [Fact]
+    public async Task GetById_ReturnsCustomer_WhenExists()
+    {
+        await _fixture.ResetDatabaseAsync();
+        var now = DateTime.UtcNow;
+        var newCustomer = new Customer
+        {
+            IdentitySubjectId = Guid.NewGuid().ToString(),
+            DisplayName = "Integration Test Customer",
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        var id = await _fixture.InsertCustomerAsync(newCustomer);
+
+        var result = _repository.GetById(id);
+
+        Assert.NotNull(result);
+        Assert.Equal(id, result!.Id);
+        Assert.Equal(newCustomer.IdentitySubjectId, result.IdentitySubjectId);
+        Assert.Equal(newCustomer.DisplayName, result.DisplayName);
+    }
+}
