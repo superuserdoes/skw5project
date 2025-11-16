@@ -12,13 +12,6 @@ using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var isRunningInContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")?
-    .Equals("true", StringComparison.OrdinalIgnoreCase) == true;
-if (isRunningInContainer)
-{
-    builder.Configuration.AddJsonFile("appsettings.Container.json", optional: true, reloadOnChange: false);
-}
-
 builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
@@ -65,7 +58,7 @@ else
     }
 
     var resolvedConnectionString = connectionString;
-    if (isRunningInContainer)
+    if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")?.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
     {
         var npgsqlBuilder = new NpgsqlConnectionStringBuilder(connectionString);
         if (ShouldRewriteLocalHost(npgsqlBuilder.Host))
