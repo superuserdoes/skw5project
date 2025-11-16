@@ -23,6 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DeliFHery.Domain\DeliFHery.Domain.csproj" />
+    <ProjectReference Include="..\DeliFHery.Infrastructure\DeliFHery.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Controllers\" />
   </ItemGroup>
 

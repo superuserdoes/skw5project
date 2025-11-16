@@ -1,50 +1,40 @@
-using DeliFHery.Domain.Entities;
+using System;
 using DeliFHery.Infrastructure.Repositories;
 using DeliFHery.Tests.Infrastructure;
 
 namespace DeliFHery.Tests;
 
-public class CustomerRepositoryTests : IClassFixture<SqlServerFixture>
+namespace DeliFHery.Tests;
+
+public class CustomerRepositoryTests
 {
-    private readonly SqlServerFixture _fixture;
-    private readonly CustomerRepository _repository;
-
-    public CustomerRepositoryTests(SqlServerFixture fixture)
-    {
-        _fixture = fixture;
-        _repository = new CustomerRepository(_fixture.ConnectionString);
-    }
-
     [Fact]
     public async Task GetById_ReturnsNull_WhenNotExists()
     {
-        await _fixture.ResetDatabaseAsync();
+        using var database = new SqliteTestDatabase();
+        var contactRepository = new ContactMethodRepository(database.ConnectionFactory);
+        var repository = new CustomerRepository(database.ConnectionFactory, contactRepository);
 
-        var result = _repository.GetById(999);
+        var result = repository.GetById(99);
 
         Assert.Null(result);
     }
 
     [Fact]
-    public async Task GetById_ReturnsCustomer_WhenExists()
+    public void GetById_ReturnsCustomerWithContactMethods()
     {
-        await _fixture.ResetDatabaseAsync();
-        var now = DateTime.UtcNow;
-        var newCustomer = new Customer
-        {
-            IdentitySubjectId = Guid.NewGuid().ToString(),
-            DisplayName = "Integration Test Customer",
-            CreatedAt = now,
-            UpdatedAt = now
-        };
+        using var database = new SqliteTestDatabase();
+        var timestamp = DateTime.UtcNow;
+        database.InsertCustomer(1, "subject-1", "Alice", timestamp, timestamp);
+        database.InsertContactMethod(100, 1, "Email", "alice@example.com", true, true, timestamp, timestamp);
+        var contactRepository = new ContactMethodRepository(database.ConnectionFactory);
+        var repository = new CustomerRepository(database.ConnectionFactory, contactRepository);
 
-        var id = await _fixture.InsertCustomerAsync(newCustomer);
+        var customer = repository.GetById(1);
 
-        var result = _repository.GetById(id);
-
-        Assert.NotNull(result);
-        Assert.Equal(id, result!.Id);
-        Assert.Equal(newCustomer.IdentitySubjectId, result.IdentitySubjectId);
-        Assert.Equal(newCustomer.DisplayName, result.DisplayName);
+        Assert.NotNull(customer);
+        Assert.Equal("Alice", customer!.DisplayName);
+        Assert.Single(customer.ContactMethods);
+        Assert.Equal("alice@example.com", customer.ContactMethods[0].Value);
     }
 }
