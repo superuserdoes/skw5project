@@ -1,25 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Xunit;
+using System;
 using DeliFHery.Infrastructure.Repositories;
+
+namespace DeliFHery.Tests;
 
 public class CustomerRepositoryTests
 {
-    private const string TestConnectionString =
-        "Server=localhost;Database=DeliFHeryTest;User Id=sa;Password=YourPassword123;TrustServerCertificate=True;";
-
     [Fact]
     public void GetById_ReturnsNull_WhenNotExists()
     {
-        var repo = new CustomerRepository(TestConnectionString);
+        using var database = new SqliteTestDatabase();
+        var contactRepository = new ContactMethodRepository(database.ConnectionFactory);
+        var repository = new CustomerRepository(database.ConnectionFactory, contactRepository);
 
-        var result = repo.GetById(-1);
+        var result = repository.GetById(99);
 
         Assert.Null(result);
     }
-}
 
+    [Fact]
+    public void GetById_ReturnsCustomerWithContactMethods()
+    {
+        using var database = new SqliteTestDatabase();
+        var timestamp = DateTime.UtcNow;
+        database.InsertCustomer(1, "subject-1", "Alice", timestamp, timestamp);
+        database.InsertContactMethod(100, 1, "Email", "alice@example.com", true, true, timestamp, timestamp);
+        var contactRepository = new ContactMethodRepository(database.ConnectionFactory);
+        var repository = new CustomerRepository(database.ConnectionFactory, contactRepository);
+
+        var customer = repository.GetById(1);
+
+        Assert.NotNull(customer);
+        Assert.Equal("Alice", customer!.DisplayName);
+        Assert.Single(customer.ContactMethods);
+        Assert.Equal("alice@example.com", customer.ContactMethods[0].Value);
+    }
+}
