@@ -1,12 +1,15 @@
 using System;
 using DeliFHery.Infrastructure.Repositories;
+using DeliFHery.Tests.Infrastructure;
+
+namespace DeliFHery.Tests;
 
 namespace DeliFHery.Tests;
 
 public class CustomerRepositoryTests
 {
     [Fact]
-    public void GetById_ReturnsNull_WhenNotExists()
+    public async Task GetById_ReturnsNull_WhenNotExists()
     {
         using var database = new SqliteTestDatabase();
         var contactRepository = new ContactMethodRepository(database.ConnectionFactory);
