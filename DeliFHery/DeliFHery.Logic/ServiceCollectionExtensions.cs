@@ -7,10 +7,10 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddDeliFHeryLogic(this IServiceCollection services)
     {
-        services.AddSingleton<IEntityValidator<Customer>, CustomerValidator>();
-        services.AddSingleton<IEntityValidator<DeliveryOrder>, DeliveryOrderValidator>();
-        services.AddSingleton<IEntityValidator<Contact>, ContactValidator>();
-        services.AddSingleton<IDeliFHeryLogic, DeliFHeryLogic>();
+        services.AddScoped<IEntityValidator<Customer>, CustomerValidator>();
+        services.AddScoped<IEntityValidator<DeliveryOrder>, DeliveryOrderValidator>();
+        services.AddScoped<IEntityValidator<Contact>, ContactValidator>();
+        services.AddScoped<IDeliFHeryLogic, DeliFHeryLogic>();
         return services;
     }
 }
