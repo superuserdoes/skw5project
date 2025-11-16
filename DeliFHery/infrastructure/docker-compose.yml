@@ -40,7 +40,7 @@ services:
 
   api:
     build:
-      context: ./DeliFHery
+      context: ..
       dockerfile: DeliFHery.Api/Dockerfile
     container_name: delifhery-api
     depends_on:
