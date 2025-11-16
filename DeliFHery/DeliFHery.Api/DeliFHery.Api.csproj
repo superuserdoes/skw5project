@@ -17,4 +17,8 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\DeliFHery.Logic\DeliFHery.Logic.csproj" />
+  </ItemGroup>
+
 </Project>
