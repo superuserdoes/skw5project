@@ -56,7 +56,19 @@
         "include.in.token.scope": "true",
         "display.on.consent.screen": "false"
       },
-      "protocolMappers": []
+      "protocolMappers": [
+        {
+          "name": "audience-delifhery-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "delifhery-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
     }
   ],
   "roles": {
