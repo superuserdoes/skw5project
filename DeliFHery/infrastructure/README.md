@@ -33,11 +33,12 @@ Either command sequence will produce the same containers and host port bindings.
 
 ### Windows one-click launcher
 
-If you prefer a single command that opens the usual helper windows (compose up, port list, live logs, and a token request), run one of the bundled scripts from the repository root:
+If you prefer a single command that runs the usual helper tasks (compose up, port list, live logs, and a token request) without spawning extra windows, run one of the bundled scripts from the repository root:
 
 - **PowerShell (recommended):**
   ```powershell
   # add -ResetKeycloakVolume to wipe the Keycloak volume and force a fresh realm import
+  # add -NoLogs to skip the log tail and return immediately
   ./infrastructure/run.ps1
   ```
 
@@ -47,12 +48,7 @@ If you prefer a single command that opens the usual helper windows (compose up, 
   infrastructure\run.bat
   ```
 
-Each script opens separate windows for:
-
-1. `docker compose up --build`
-2. `docker compose ps` (port mappings)
-3. `docker compose logs -f api keycloak`
-4. A token helper that waits for Keycloak to report ready, then runs `curl.exe` (not the PowerShell alias) to request a token. No scope parameter is required because `delifhery-api` is a default client scope.
+The PowerShell script now runs everything inline: it builds/starts the stack detached, prints container status, waits for Keycloak to come online, requests a token with `curl.exe`, and then tails the API and Keycloak logs in the same window (omit `-NoLogs` if you want to skip the tail). The cmd.exe script still spawns helper windows because that is how `start` works on cmd.
 
 If you still encounter `invalid_scope`, close the windows, rerun the script with the volume reset flag, and request the token again after Keycloak finishes importing the realm.
 
