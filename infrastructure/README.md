@@ -31,6 +31,31 @@ docker compose -f infrastructure/docker-compose.yml up --build
 
 Either command sequence will produce the same containers and host port bindings.
 
+### Windows one-click launcher
+
+If you prefer a single command that opens the usual helper windows (compose up, port list, live logs, and a token request), run one of the bundled scripts from the repository root:
+
+- **PowerShell (recommended):**
+  ```powershell
+  # add -ResetKeycloakVolume to wipe the Keycloak volume and force a fresh realm import
+  ./infrastructure/run.ps1
+  ```
+
+- **Command Prompt:**
+  ```bat
+  rem add --reset-keycloak to wipe the Keycloak volume and force a fresh realm import
+  infrastructure\run.bat
+  ```
+
+Each script opens separate windows for:
+
+1. `docker compose up --build`
+2. `docker compose ps` (port mappings)
+3. `docker compose logs -f api keycloak`
+4. A ready-to-run token request (no scope parameter required)
+
+If you still encounter `invalid_scope`, close the windows, rerun the script with the volume reset flag, and request the token again after Keycloak finishes importing the realm.
+
 ## Verifying that the services are reachable
 
 1. Wait for the `delifhery-api` logs to print `Now listening on: http://[::]:8080`. That means Swagger will be available at `http://localhost:5000/swagger`.
@@ -65,3 +90,73 @@ curl http://localhost:5000/api/health
 ```
 
 Swap `5000` for whatever `docker compose port api 8080` prints if you customized the mapping.
+
+## Getting a Keycloak token for the API
+
+The API enforces the `delifhery-api` scope. A matching client scope is baked into the realm import, so you can request it from the bundled Keycloak instance without any manual setup.
+
+1. Make sure the stack is running (see commands above).
+2. If you ever see `invalid_scope` when requesting a token, it usually means your `keycloak-data` volume still holds an older realm that predates the `delifhery-api` scope. Remove the volume so Keycloak re-imports the updated realm on next start:
+
+   - **PowerShell / WSL / Git Bash:**
+     ```bash
+     docker compose -f infrastructure/docker-compose.yml down -v
+     ```
+
+   - **cmd.exe:**
+     ```bat
+     docker compose -f infrastructure\docker-compose.yml down -v
+     ```
+
+   Then start the stack again: `docker compose -f infrastructure/docker-compose.yml up --build`.
+
+3. Request an access token using the seeded user and the `delifhery-web` client. The `delifhery-api` scope is now a **default** client scope, so you do **not** need to pass a `scope=` parameter. If you add `scope=delifhery-api` and still see `invalid_scope`, your Keycloak volume is stale—reset it with `down -v` or `--reset-keycloak` as shown above.
+
+   - **PowerShell** (recommended on modern Windows):
+     ```powershell
+     curl -Method POST http://localhost:8080/realms/delifhery/protocol/openid-connect/token `
+       -Headers @{ "Content-Type" = "application/x-www-form-urlencoded" } `
+       -Body "grant_type=password&client_id=delifhery-web&username=dispatcher&password=ChangeMe123!"
+     ```
+
+   - **cmd.exe** (Command Prompt):
+     ```bat
+     curl -X POST http://localhost:8080/realms/delifhery/protocol/openid-connect/token ^
+       -H "Content-Type: application/x-www-form-urlencoded" ^
+       -d "grant_type=password" ^
+       -d "client_id=delifhery-web" ^
+       -d "username=dispatcher" ^
+       -d "password=ChangeMe123!"
+     ```
+
+   - **bash / WSL / Git Bash**:
+     ```bash
+     curl -X POST http://localhost:8080/realms/delifhery/protocol/openid-connect/token \
+       -H "Content-Type: application/x-www-form-urlencoded" \
+       -d "grant_type=password" \
+       -d "client_id=delifhery-web" \
+       -d "username=dispatcher" \
+       -d "password=ChangeMe123!"
+     ```
+
+   Keycloak rejects unknown scopes. Because `delifhery-api` is now a default client scope, omitting `scope=` is safest and still produces a token the API will accept. The response JSON contains `access_token`. Copy that value.
+
+3. Call the API with the token (replace `5000` if your port differs):
+
+   ```bash
+   curl http://localhost:5000/api/deliveries \
+     -H "Authorization: Bearer <access_token>"
+   ```
+
+If you omit the `delifhery-api` scope, Keycloak will reject the request with `invalid_scope` and the API will respond with `Unauthorized`.
+
+### Refreshing the imported realm (to pick up changes)
+
+The Keycloak data is stored in the `keycloak-data` Docker volume. If you started the stack before the `delifhery-api` scope was added, Keycloak will skip re-importing the realm and you will still have the old configuration. To force a fresh import:
+
+```bash
+docker compose -f infrastructure/docker-compose.yml down -v   # removes containers AND volumes
+docker compose -f infrastructure/docker-compose.yml up --build
+```
+
+This wipes the persisted realm, re-imports `realm-export.json`, and ensures the `delifhery-api` scope and user are available. You can also remove just the Keycloak volume without touching Postgres data via `docker volume rm delifhery-platform_keycloak-data`.
