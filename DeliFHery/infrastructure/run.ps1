@@ -1,5 +1,6 @@
 param(
-    [switch]$ResetKeycloakVolume
+    [switch]$ResetKeycloakVolume,
+    [switch]$NoLogs
 )
 
 # Resolve repo root and compose path
@@ -14,21 +15,13 @@ if ($ResetKeycloakVolume) {
     docker volume rm delifhery-platform_keycloak-data -f | Out-Null
 }
 
-# Start docker compose (build + up)
-$composeCmd = "docker compose -f `"$ComposeFile`" up --build"
-Start-Process powershell -ArgumentList "-NoExit", "-Command", $composeCmd
+Write-Host "Building and starting containers (detached)..." -ForegroundColor Cyan
+docker compose -f "$ComposeFile" up --build -d
 
-# Show port mappings
-$portsCmd = "docker compose -f `"$ComposeFile`" ps"
-Start-Process powershell -ArgumentList "-NoExit", "-Command", $portsCmd
+Write-Host "\nContainer status:" -ForegroundColor Cyan
+docker compose -f "$ComposeFile" ps
 
-# Tail API + Keycloak logs
-$logsCmd = "docker compose -f `"$ComposeFile`" logs -f api keycloak"
-Start-Process powershell -ArgumentList "-NoExit", "-Command", $logsCmd
-
-# Token helper window: wait until Keycloak is reachable, then fetch a token.
-$tokenCmd = @"
-Write-Host 'Waiting for Keycloak to become ready (up to 3 minutes)...'
+Write-Host "\nWaiting for Keycloak to become ready (up to 3 minutes)..." -ForegroundColor Cyan
 $sw = [Diagnostics.Stopwatch]::StartNew()
 while ($sw.Elapsed.TotalSeconds -lt 180) {
     try {
@@ -47,5 +40,8 @@ curl.exe -X POST "http://localhost:8080/realms/delifhery/protocol/openid-connect
   -d "client_id=delifhery-web" `
   -d "username=dispatcher" `
   -d "password=ChangeMe123!"
-"@
-Start-Process powershell -ArgumentList "-NoExit", "-Command", $tokenCmd
+
+if (-not $NoLogs) {
+    Write-Host "\nFollowing API and Keycloak logs (Ctrl+C to exit)..." -ForegroundColor Cyan
+    docker compose -f "$ComposeFile" logs -f api keycloak
+}
