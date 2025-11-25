@@ -38,6 +38,7 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": true,
       "defaultClientScopes": [
+        "delifhery-api",
         "profile",
         "email"
       ],

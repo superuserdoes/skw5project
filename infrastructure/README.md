@@ -71,19 +71,54 @@ Swap `5000` for whatever `docker compose port api 8080` prints if you customized
 The API enforces the `delifhery-api` scope. A matching client scope is baked into the realm import, so you can request it from the bundled Keycloak instance without any manual setup.
 
 1. Make sure the stack is running (see commands above).
-2. Request an access token using the seeded user and the `delifhery-web` client:
+2. If you ever see `invalid_scope` when requesting a token, it usually means your `keycloak-data` volume still holds an older realm that predates the `delifhery-api` scope. Remove the volume so Keycloak re-imports the updated realm on next start:
 
-   ```bash
-   curl -X POST http://localhost:8080/realms/delifhery/protocol/openid-connect/token \
-     -H "Content-Type: application/x-www-form-urlencoded" \
-     -d "grant_type=password" \
-     -d "client_id=delifhery-web" \
-     -d "username=dispatcher" \
-     -d "password=ChangeMe123!" \
-     -d "scope=openid delifhery-api"
-   ```
+   - **PowerShell / WSL / Git Bash:**
+     ```bash
+     docker compose -f infrastructure/docker-compose.yml down -v
+     ```
 
-   The response JSON contains `access_token`. Copy that value.
+   - **cmd.exe:**
+     ```bat
+     docker compose -f infrastructure\docker-compose.yml down -v
+     ```
+
+   Then start the stack again: `docker compose -f infrastructure/docker-compose.yml up --build`.
+
+3. Request an access token using the seeded user and the `delifhery-web` client. Examples for each shell:
+
+   - **PowerShell** (recommended on modern Windows):
+     ```powershell
+     curl -Method POST http://localhost:8080/realms/delifhery/protocol/openid-connect/token `
+       -Headers @{ "Content-Type" = "application/x-www-form-urlencoded" } `
+       -Body "grant_type=password&client_id=delifhery-web&username=dispatcher&password=ChangeMe123!&scope=delifhery-api"
+     ```
+
+   - **cmd.exe** (Command Prompt):
+     ```bat
+     curl -X POST http://localhost:8080/realms/delifhery/protocol/openid-connect/token ^
+       -H "Content-Type: application/x-www-form-urlencoded" ^
+       -d "grant_type=password" ^
+       -d "client_id=delifhery-web" ^
+       -d "username=dispatcher" ^
+       -d "password=ChangeMe123!" ^
+       -d "scope=delifhery-api"
+     ```
+
+   - **bash / WSL / Git Bash**:
+     ```bash
+     curl -X POST http://localhost:8080/realms/delifhery/protocol/openid-connect/token \
+       -H "Content-Type: application/x-www-form-urlencoded" \
+       -d "grant_type=password" \
+       -d "client_id=delifhery-web" \
+       -d "username=dispatcher" \
+       -d "password=ChangeMe123!" \
+       -d "scope=delifhery-api"
+     ```
+
+   Keycloak rejects unknown scopes, so stick to `delifhery-api` (and avoid shell line-break issues by using the variant that matches your terminal). The response JSON contains `access_token`. Copy that value.
+
+   > Tip: The realm export now ships `delifhery-api` as a **default** client scope, so if you omit the `scope` line entirely the token will still include it after you’ve refreshed the Keycloak volume.
 
 3. Call the API with the token (replace `5000` if your port differs):
 
@@ -93,3 +128,14 @@ The API enforces the `delifhery-api` scope. A matching client scope is baked int
    ```
 
 If you omit the `delifhery-api` scope, Keycloak will reject the request with `invalid_scope` and the API will respond with `Unauthorized`.
+
+### Refreshing the imported realm (to pick up changes)
+
+The Keycloak data is stored in the `keycloak-data` Docker volume. If you started the stack before the `delifhery-api` scope was added, Keycloak will skip re-importing the realm and you will still have the old configuration. To force a fresh import:
+
+```bash
+docker compose -f infrastructure/docker-compose.yml down -v   # removes containers AND volumes
+docker compose -f infrastructure/docker-compose.yml up --build
+```
+
+This wipes the persisted realm, re-imports `realm-export.json`, and ensures the `delifhery-api` scope and user are available. You can also remove just the Keycloak volume without touching Postgres data via `docker volume rm delifhery-platform_keycloak-data`.
