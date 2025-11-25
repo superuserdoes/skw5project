@@ -1,6 +1,11 @@
 # Infrastructure stack
 
-This repository contains two identical Docker Compose files so you can run the stack either from the repository root (`infrastructure/docker-compose.yml`) or from within the `DeliFHery` sub-project (`DeliFHery/infrastructure/docker-compose.yml`). Both files define the exact same services and ports – choose whichever is most convenient for where you are working from.
+Two Docker Compose files exist in the repo, but **only one of them has been validated end-to-end**:
+
+- ✅ `DeliFHery/infrastructure/docker-compose.yml` – works today because the build context points at the application source.
+- ⚠️ `infrastructure/docker-compose.yml` – currently fails to build the API image because the Docker build context is wrong. You can fix it locally by changing the `api.build.context` to `./DeliFHery`, or simply use the known-good file above.
+
+Until the root-level compose file is corrected in source control, use the `DeliFHery/infrastructure/docker-compose.yml` variant so you are not blocked by the bad build context.
 
 ## Services and ports
 
@@ -14,22 +19,20 @@ There are no conflicting port mappings across the compose files – the mappings
 
 ## Running the stack
 
-From the repository root:
+From the `DeliFHery` directory (recommended because it uses the working compose file):
 
 ```bash
 # build the API image and start postgres, keycloak, and the API
-cd /workspace/skw5project
-docker compose -f infrastructure/docker-compose.yml up --build
-```
-
-Alternatively, if you prefer to work from inside the `DeliFHery` directory, run:
-
-```bash
 cd /workspace/skw5project/DeliFHery
 docker compose -f infrastructure/docker-compose.yml up --build
 ```
 
-Either command sequence will produce the same containers and host port bindings.
+If you prefer running from the repository root, **first** edit `infrastructure/docker-compose.yml` to set `services.api.build.context: ./DeliFHery`, then run:
+
+```bash
+cd /workspace/skw5project
+docker compose -f infrastructure/docker-compose.yml up --build
+```
 
 ### Windows one-click launcher
 
