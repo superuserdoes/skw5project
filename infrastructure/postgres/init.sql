@@ -1,0 +1,4 @@
+CREATE SCHEMA IF NOT EXISTS delifhery;
+GRANT ALL ON SCHEMA delifhery TO delifhery;
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
