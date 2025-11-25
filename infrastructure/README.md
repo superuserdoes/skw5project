@@ -52,7 +52,7 @@ Each script opens separate windows for:
 1. `docker compose up --build`
 2. `docker compose ps` (port mappings)
 3. `docker compose logs -f api keycloak`
-4. A ready-to-run token request (no scope parameter required)
+4. A token helper that waits for Keycloak to report ready, then runs `curl.exe` (not the PowerShell alias) to request a token. No scope parameter is required because `delifhery-api` is a default client scope.
 
 If you still encounter `invalid_scope`, close the windows, rerun the script with the volume reset flag, and request the token again after Keycloak finishes importing the realm.
 
@@ -118,6 +118,17 @@ The API enforces the `delifhery-api` scope. A matching client scope is baked int
        -Headers @{ "Content-Type" = "application/x-www-form-urlencoded" } `
        -Body "grant_type=password&client_id=delifhery-web&username=dispatcher&password=ChangeMe123!"
      ```
+
+      If you prefer `curl.exe`, call it explicitly (PowerShell aliases `curl` to `Invoke-WebRequest`):
+
+      ```powershell
+      curl.exe -X POST http://localhost:8080/realms/delifhery/protocol/openid-connect/token `
+        -H "Content-Type: application/x-www-form-urlencoded" `
+        -d "grant_type=password" `
+        -d "client_id=delifhery-web" `
+        -d "username=dispatcher" `
+        -d "password=ChangeMe123!"
+      ```
 
    - **cmd.exe** (Command Prompt):
      ```bat

@@ -26,13 +26,26 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", $portsCmd
 $logsCmd = "docker compose -f `"$ComposeFile`" logs -f api keycloak"
 Start-Process powershell -ArgumentList "-NoExit", "-Command", $logsCmd
 
-# Token helper (default scopes included automatically, no scope param needed)
+# Token helper window: wait until Keycloak is reachable, then fetch a token.
 $tokenCmd = @"
-curl -X POST http://localhost:8080/realms/delifhery/protocol/openid-connect/token `
-  -H 'Content-Type: application/x-www-form-urlencoded' `
-  -d 'grant_type=password' `
-  -d 'client_id=delifhery-web' `
-  -d 'username=dispatcher' `
-  -d 'password=ChangeMe123!'
+Write-Host 'Waiting for Keycloak to become ready (up to 3 minutes)...'
+$sw = [Diagnostics.Stopwatch]::StartNew()
+while ($sw.Elapsed.TotalSeconds -lt 180) {
+    try {
+        Invoke-RestMethod -UseBasicParsing -Method Get -Uri 'http://localhost:8080/realms/delifhery/.well-known/openid-configuration' -TimeoutSec 5 | Out-Null
+        Write-Host 'Keycloak is ready.' -ForegroundColor Green
+        break
+    } catch {
+        Start-Sleep -Seconds 3
+    }
+}
+
+Write-Host "Requesting token for 'dispatcher' using curl.exe..." -ForegroundColor Cyan
+curl.exe -X POST "http://localhost:8080/realms/delifhery/protocol/openid-connect/token" `
+  -H "Content-Type: application/x-www-form-urlencoded" `
+  -d "grant_type=password" `
+  -d "client_id=delifhery-web" `
+  -d "username=dispatcher" `
+  -d "password=ChangeMe123!"
 "@
 Start-Process powershell -ArgumentList "-NoExit", "-Command", $tokenCmd
