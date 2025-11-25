@@ -37,6 +37,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
+      - keycloak-data:/opt/keycloak/data
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/delifhery-realm.json:ro
 
   api:
@@ -65,3 +66,4 @@ networks:
 
 volumes:
   postgres-data:
+  keycloak-data:
