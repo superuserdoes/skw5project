@@ -37,13 +37,24 @@ try {
         }
     }
 
-    Write-Host "Requesting token for 'dispatcher' using curl.exe..." -ForegroundColor Cyan
-    curl.exe -X POST "http://localhost:8080/realms/delifhery/protocol/openid-connect/token" `
-      -H "Content-Type: application/x-www-form-urlencoded" `
-      -d "grant_type=password" `
-      -d "client_id=delifhery-web" `
-      -d "username=dispatcher" `
-      -d "password=ChangeMe123!"
+    Write-Host "Requesting token for 'dispatcher' and copying to clipboard..." -ForegroundColor Cyan
+    $tokenResponse = Invoke-RestMethod -UseBasicParsing -Method Post `
+        -Uri 'http://localhost:8080/realms/delifhery/protocol/openid-connect/token' `
+        -ContentType 'application/x-www-form-urlencoded' `
+        -Body @{
+            grant_type = 'password'
+            client_id = 'delifhery-web'
+            username = 'dispatcher'
+            password = 'ChangeMe123!'
+        }
+
+    if ($tokenResponse.access_token) {
+        Set-Clipboard -Value $tokenResponse.access_token
+        Write-Host "Access token copied to clipboard." -ForegroundColor Green
+        Write-Host "Token snippet (first 40 chars): $($tokenResponse.access_token.Substring(0, [Math]::Min(40, $tokenResponse.access_token.Length)))..." -ForegroundColor DarkGray
+    } else {
+        Write-Warning "Token response did not include an access_token."
+    }
 
     if (-not $NoLogs) {
         Write-Host "\nFollowing API and Keycloak logs (Ctrl+C to exit)..." -ForegroundColor Cyan
