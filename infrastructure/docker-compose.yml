@@ -1,0 +1,82 @@
+name: delifhery-platform
+
+services:
+  database:
+    image: postgres:16-alpine
+    container_name: delifhery-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: delifhery
+      POSTGRES_PASSWORD: delifhery
+      POSTGRES_DB: delifhery
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      delifhery-net:
+        aliases:
+          - database
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: delifhery-keycloak
+    depends_on:
+      database:
+        condition: service_healthy
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: localhost
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY: edge
+    ports:
+      - "8080:8080"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/delifhery-realm.json:ro
+    networks:
+      delifhery-net:
+        aliases:
+          - keycloak
+
+  api:
+    build:
+      context: ..
+      dockerfile: DeliFHery.Api/Dockerfile
+    container_name: delifhery-api
+    depends_on:
+      database:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DeliFHeryDb: Host=database;Port=5432;Database=delifhery;Username=delifhery;Password=delifhery
+      Keycloak__Authority: http://keycloak:8080/realms/delifhery
+      Keycloak__Audience: delifhery-api
+      Keycloak__RequiredScope: delifhery-api
+      Keycloak__RequireHttpsMetadata: "false"
+    ports:
+      - "5000:8080"
+    networks:
+      delifhery-net:
+        aliases:
+          - api
+
+networks:
+  delifhery-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  keycloak-data:
