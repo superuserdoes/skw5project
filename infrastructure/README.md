@@ -65,3 +65,31 @@ curl http://localhost:5000/api/health
 ```
 
 Swap `5000` for whatever `docker compose port api 8080` prints if you customized the mapping.
+
+## Getting a Keycloak token for the API
+
+The API enforces the `delifhery-api` scope. A matching client scope is baked into the realm import, so you can request it from the bundled Keycloak instance without any manual setup.
+
+1. Make sure the stack is running (see commands above).
+2. Request an access token using the seeded user and the `delifhery-web` client:
+
+   ```bash
+   curl -X POST http://localhost:8080/realms/delifhery/protocol/openid-connect/token \
+     -H "Content-Type: application/x-www-form-urlencoded" \
+     -d "grant_type=password" \
+     -d "client_id=delifhery-web" \
+     -d "username=dispatcher" \
+     -d "password=ChangeMe123!" \
+     -d "scope=openid delifhery-api"
+   ```
+
+   The response JSON contains `access_token`. Copy that value.
+
+3. Call the API with the token (replace `5000` if your port differs):
+
+   ```bash
+   curl http://localhost:5000/api/deliveries \
+     -H "Authorization: Bearer <access_token>"
+   ```
+
+If you omit the `delifhery-api` scope, Keycloak will reject the request with `invalid_scope` and the API will respond with `Unauthorized`.

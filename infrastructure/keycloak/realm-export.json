@@ -40,7 +40,22 @@
       "defaultClientScopes": [
         "profile",
         "email"
+      ],
+      "optionalClientScopes": [
+        "delifhery-api"
       ]
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "delifhery-api",
+      "description": "Scope required by the protected API",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": []
     }
   ],
   "roles": {
