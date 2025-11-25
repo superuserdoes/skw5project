@@ -120,20 +120,31 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    var securityScheme = new OpenApiSecurityScheme
+    const string bearerSchemeName = JwtBearerDefaults.AuthenticationScheme;
+
+    options.AddSecurityDefinition(bearerSchemeName, new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
-        Scheme = JwtBearerDefaults.AuthenticationScheme,
+        Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Enter the Bearer token obtained from Keycloak"
-    };
+        Description = "Enter the access token from Keycloak (without the 'Bearer' prefix)"
+    });
 
-    options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-        { securityScheme, Array.Empty<string>() }
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = bearerSchemeName
+                }
+            },
+            Array.Empty<string>()
+        }
     });
 });
 
