@@ -19,6 +19,10 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      delifhery-net:
+        aliases:
+          - database
 
   keycloak:
     image: quay.io/keycloak/keycloak:24.0
@@ -39,6 +43,10 @@ services:
     volumes:
       - keycloak-data:/opt/keycloak/data
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/delifhery-realm.json:ro
+    networks:
+      delifhery-net:
+        aliases:
+          - keycloak
 
   api:
     build:
@@ -59,9 +67,13 @@ services:
       Keycloak__RequireHttpsMetadata: "false"
     ports:
       - "5000:8080"
+    networks:
+      delifhery-net:
+        aliases:
+          - api
 
 networks:
-  default:
+  delifhery-net:
     driver: bridge
 
 volumes:
