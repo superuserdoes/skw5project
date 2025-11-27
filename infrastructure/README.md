@@ -7,7 +7,7 @@ This repository contains two identical Docker Compose files so you can run the s
 | Service  | Compose name | Host port → container port | Purpose |
 |----------|--------------|----------------------------|---------|
 | PostgreSQL | `database` | `5432 → 5432` | Persists the application data. Credentials are defined via `POSTGRES_USER/PASSWORD/DB` env vars. |
-| Keycloak | `keycloak` | `8080 → 8080` | Provides authentication/authorization via the bundled realm import. |
+| Keycloak | `keycloak` | `8080 → 8080` | Provides authentication/authorization via the bundled realm import. The hostname is not pinned, so the admin console loads correctly whether you use `localhost`, `127.0.0.1`, or another loopback alias. |
 | ASP.NET API | `api` | `5000 → 8080` | Hosts `DeliFHery.Api`. The container binds to `http://+:8080` internally, and Docker publishes it to `http://localhost:5000` by default. |
 
 There are no conflicting port mappings across the compose files – the mappings above are identical in both compose definitions, so you will always get the same host endpoints regardless of which compose file you launch.
