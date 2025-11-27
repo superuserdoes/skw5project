@@ -1,0 +1,49 @@
+# IDE settings
+.vs/
+.vscode/
+**/.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Build outputs
+**/bin/
+**/obj/
+**/Debug/
+**/Release/
+artifacts/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+*.nuget.props
+*.nuget.targets
+
+# Logs and coverage
+TestResults/
+*.coverage
+*.coveragexml
+*.opencover.xml
+*.trx
+*.log
+
+# ReSharper / Rider
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Misc
+*.dbmdl
+*.bak
+*.db
+*.cache
+*.pidb
+*.svclog
+*.pdb
+Thumbs.db
+*.DS_Store
