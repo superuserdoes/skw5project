@@ -1,0 +1,102 @@
+﻿@page "/"
+
+<PageTitle>OPA - Online Payment Approval</PageTitle>
+
+<div class="docs-container">
+    <h1>OPA - Online Payment Approval</h1>
+    <p>SWK 5 demo payment provider</p>
+
+    <h2>Configuration</h2>
+    <p>Before using the OPA system, you must configure the API key in <code>appsettings.json</code>:</p>
+    <pre><code>{
+  "OPA": {
+    "ApiKey": "your-secure-api-key"
+  }
+}</code></pre>
+    <p><strong>Important:</strong> Only requests with the configured API key will be accepted. The default API key is <code>OPA-12345-67890</code>.</p>
+
+    <h2>How to Use</h2>
+    
+    <h3>1. Create a Payment</h3>
+    <p>Send a POST request to <code>/api/payment/create</code> with:</p>
+    <ul>
+        <li><strong>Header:</strong> <code>X-API-Key</code> with the configured API key</li>
+        <li><strong>Body (JSON):</strong></li>
+    </ul>
+    <pre><code>{
+  "paymentId": "unique-payment-id",
+  "amount": 99.99,
+  "callbackUrl": "https://your-system.com/payment-callback",
+  "redirectUrl": "https://your-system.com/payment-complete" // Optional
+}</code></pre>
+    
+    <p><strong>Response (Success - 200 OK):</strong></p>
+    <pre><code>{
+  "paymentUrl": "https://opa-system.com/payment/{paymentId}?redirect=..."
+}</code></pre>
+
+    <p><strong>Response (Unauthorized - 401):</strong></p>
+    <p>If the API key is missing or incorrect:</p>
+    <pre><code>401 Unauthorized</code></pre>
+
+    <p><strong>Response (Conflict - 409 Conflict):</strong></p>
+    <p>If the payment ID already exists, you will receive:</p>
+    <pre><code>{
+  "error": "Payment ID already exists",
+  "paymentId": "unique-payment-id"
+}</code></pre>
+
+    <p><strong>Note:</strong> Each payment ID must be unique. If you attempt to create a payment with an ID that already exists, the API will return a 409 Conflict status code.</p>
+
+    <h3>2. Redirect Customer to Payment Page</h3>
+    <p>Send your customer to the <code>paymentUrl</code> returned by the API. If you included <code>redirectUrl</code> in your request, it will automatically be appended as a query parameter.</p>
+    <p><strong>Alternative:</strong> You can also manually add a <code>redirect-url</code> query parameter when redirecting the customer:</p>
+    <pre><code>https://opa-system.com/payment/{paymentId}?redirect-url=https://your-system.com/payment-complete</code></pre>
+    <p>After a <strong>successful</strong> payment, the customer will be redirected to your URL with the following query parameters:</p>
+    <ul>
+        <li><code>payment-id</code> - The payment ID</li>
+        <li><code>status</code> - Payment status (Completed)</li>
+    </ul>
+    <p><strong>Example redirect:</strong></p>
+    <pre><code>https://your-system.com/payment-complete?payment-id=order-12345&status=Completed</code></pre>
+
+    <h3>3. Customer Completes Payment</h3>
+    <p>The customer enters credit card information. Use these test card numbers:</p>
+    <div class="test-cards">
+        <strong>Test Card Numbers:</strong>
+        <ul>
+            <li><code>4111111111111111</code> - Successful payment</li>
+            <li><code>4000000000000002</code> - Card Expired</li>
+            <li><code>4000000000000010</code> - Invalid Card Number</li>
+            <li><code>4000000000000028</code> - Wrong Security Code</li>
+            <li><code>4000000000000036</code> - Insufficient Funds</li>
+        </ul>
+    </div>
+    
+    <p><strong>Payment Retry:</strong> If a payment fails, the customer can retry immediately with different card details. The payment page remains accessible and does not auto-redirect on failure. The page can be reloaded to retry a failed payment. Only successful payments trigger an automatic redirect to the <code>redirect_url</code>.</p>
+
+    <h3>4. Receive Callback</h3>
+    <p>OPA will POST to your callback URL with:</p>
+    <pre><code>{
+  "apiKey": "your-configured-api-key",
+  "paymentId": "unique-payment-id",
+  "amount": 99.99,
+  "status": "Completed", // or "Failed"
+  "reason": null // or error reason if failed
+}</code></pre>
+    
+    <p><strong>Note:</strong> Callbacks are sent for each payment attempt. If a customer retries a failed payment, you may receive multiple callbacks for the same payment ID with different statuses. Your callback handler should be idempotent and use the most recent status.</p>
+
+    <h2>Example Usage</h2>
+    <p>Using curl:</p>
+    <pre><code>curl -X POST https://localhost:5001/api/payment/create \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: demo-api-key-12345" \
+  -d '{
+    "paymentId": "order-12345",
+    "amount": 49.99,
+    "callbackUrl": "https://your-system.com/callback",
+    "redirectUrl": "https://your-system.com/payment-complete"
+  }'</code></pre>
+
+</div>

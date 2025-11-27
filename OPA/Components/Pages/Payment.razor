@@ -1,0 +1,225 @@
+@page "/payment/{PaymentId}"
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+@inject PaymentStore PaymentStore
+@using OPA
+@using System.ComponentModel.DataAnnotations
+
+<PageTitle>OPA Payment</PageTitle>
+
+<div class="payment-container">
+    @if (payment == null)
+    {
+        <h2>Payment Not Found</h2>
+        <p>The payment request could not be found.</p>
+    }
+    else if (payment.Status == PaymentStatus.Completed)
+    {
+        <h2>Payment Already Completed</h2>
+        <p>This payment has been completed successfully.</p>
+    }
+    else
+    {
+        <h2>Complete Payment</h2>
+        <div class="payment-info">
+            <strong>Payment ID:</strong> @payment.PaymentId<br />
+            <strong>Amount:</strong> €@payment.Amount.ToString("F2")
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-error">
+                <strong>Error:</strong> @errorMessage
+            </div>
+        }
+
+        @if (processing)
+        {
+            <div class="processing">
+                <div class="spinner"></div>
+                <p>Processing payment...</p>
+            </div>
+        }
+        else
+        {
+            <EditForm Model="@cardInfo" OnValidSubmit="@ProcessPayment">
+                <DataAnnotationsValidator />
+                
+                <div class="form-group">
+                    <label>Card Number: <span style="color: red;">*</span></label>
+                    <InputText @bind-Value="cardInfo.CardNumber" placeholder="Enter card number" />
+                    <ValidationMessage For="@(() => cardInfo.CardNumber)" />
+                    <div class="form-hint">
+                        Use special numbers to simulate errors:
+                        <ul>
+                            <li><code>4111111111111111</code> - Success</li>
+                            <li><code>4000000000000002</code> - Card Expired</li>
+                            <li><code>4000000000000010</code> - Invalid Card Number</li>
+                            <li><code>4000000000000028</code> - Wrong Security Code</li>
+                            <li><code>4000000000000036</code> - Insufficient Funds</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Expiry Date (MM/YY): <span style="color: red;">*</span></label>
+                    <InputText @bind-Value="cardInfo.ExpiryDate" placeholder="MM/YY" />
+                    <ValidationMessage For="@(() => cardInfo.ExpiryDate)" />
+                </div>
+                <div class="form-group">
+                    <label>CVV: <span style="color: red;">*</span></label>
+                    <InputText @bind-Value="cardInfo.Cvv" placeholder="123" />
+                    <ValidationMessage For="@(() => cardInfo.Cvv)" />
+                </div>
+                <div class="form-group">
+                    <label>Cardholder Name: <span style="color: red;">*</span></label>
+                    <InputText @bind-Value="cardInfo.CardholderName" placeholder="John Doe" />
+                    <ValidationMessage For="@(() => cardInfo.CardholderName)" />
+                </div>
+                <button type="submit" class="btn-primary">
+                    Pay €@payment.Amount.ToString("F2")
+                </button>
+            </EditForm>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? PaymentId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "redirect-url")]
+    public string? RedirectUrl { get; set; }
+
+    private OPA.Payment? payment;
+    private CardInfo cardInfo = new();
+    private bool processing = false;
+    private string? errorMessage;
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(PaymentId))
+        {
+            payment = PaymentStore.GetPayment(PaymentId);
+        }
+    }
+
+    private async Task ProcessPayment()
+    {
+        if (payment == null) return;
+
+        processing = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        // Simulate payment processing delay
+        await Task.Delay(1500);
+
+        // Determine payment result based on card number
+        var (status, reason) = DeterminePaymentResult(cardInfo.CardNumber);
+
+        // Update payment status
+        PaymentStore.UpdatePayment(payment.PaymentId, status, reason);
+
+        // Call callback URL
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient();
+            var callbackData = new
+            {
+                ApiKey = payment.ApiKey,
+                PaymentId = payment.PaymentId,
+                Amount = payment.Amount,
+                Status = status.ToString(),
+                Reason = reason
+            };
+
+            var response = await httpClient.PostAsJsonAsync(payment.CallbackUrl, callbackData);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Callback failed with status: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Callback error: {ex.Message}");
+        }
+
+        processing = false;
+
+        // Show result and redirect if redirect-url is provided
+        if (status == PaymentStatus.Completed)
+        {
+            errorMessage = null;
+            payment = PaymentStore.GetPayment(PaymentId!);
+            StateHasChanged();
+            await Task.Delay(2000);
+            
+            // Redirect to client's redirect URL if provided
+            if (!string.IsNullOrEmpty(RedirectUrl))
+            {
+                var redirectUrl = BuildRedirectUrl(RedirectUrl, payment!.PaymentId, status.ToString(), null);
+                Navigation.NavigateTo(redirectUrl, forceLoad: true);
+            }
+        }
+        else
+        {
+            errorMessage = $"Payment failed: {reason}. Please try again with a different card.";
+            payment = PaymentStore.GetPayment(PaymentId!);
+            StateHasChanged();
+        }
+    }
+
+    private string BuildRedirectUrl(string baseUrl, string paymentId, string status, string? reason)
+    {
+        var uriBuilder = new UriBuilder(baseUrl);
+        var query = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
+        
+        query["payment-id"] = paymentId;
+        query["status"] = status;
+        
+        if (!string.IsNullOrEmpty(reason))
+        {
+            query["reason"] = reason;
+        }
+        
+        uriBuilder.Query = query.ToString();
+        return uriBuilder.ToString();
+    }
+
+    private (PaymentStatus status, string? reason) DeterminePaymentResult(string cardNumber)
+    {
+        // Remove spaces and dashes
+        cardNumber = cardNumber.Replace(" ", "").Replace("-", "");
+
+        return cardNumber switch
+        {
+            "4000000000000002" => (PaymentStatus.Failed, "Card Expired"),
+            "4000000000000010" => (PaymentStatus.Failed, "Invalid Card Number"),
+            "4000000000000028" => (PaymentStatus.Failed, "Wrong Security Code"),
+            "4000000000000036" => (PaymentStatus.Failed, "Insufficient Funds"),
+            _ when cardNumber.StartsWith("4") && cardNumber.Length == 16 => (PaymentStatus.Completed, null),
+            _ => (PaymentStatus.Failed, "Invalid Card Number")
+        };
+    }
+
+    private class CardInfo
+    {
+        [Required(ErrorMessage = "Card number is required")]
+        [StringLength(19, MinimumLength = 13, ErrorMessage = "Card number must be between 13 and 19 characters")]
+        public string CardNumber { get; set; } = "";
+
+        [Required(ErrorMessage = "Expiry date is required")]
+        [RegularExpression(@"^(0[1-9]|1[0-2])\/([0-9]{2})$", ErrorMessage = "Invalid format. Use MM/YY")]
+        public string ExpiryDate { get; set; } = "";
+
+        [Required(ErrorMessage = "CVV is required")]
+        [StringLength(4, MinimumLength = 3, ErrorMessage = "CVV must be 3 or 4 digits")]
+        [RegularExpression(@"^[0-9]{3,4}$", ErrorMessage = "CVV must contain only numbers")]
+        public string Cvv { get; set; } = "";
+
+        [Required(ErrorMessage = "Cardholder name is required")]
+        [MinLength(2, ErrorMessage = "Cardholder name must be at least 2 characters")]
+        public string CardholderName { get; set; } = "";
+    }
+}
