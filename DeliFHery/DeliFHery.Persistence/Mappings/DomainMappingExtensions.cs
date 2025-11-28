@@ -35,15 +35,40 @@ public static class DomainMappingExtensions
             ScheduledAt = deliveryOrder.ScheduledAt,
             DeliveredAt = deliveryOrder.DeliveredAt,
             Status = deliveryOrder.Status,
-            CustomerId = deliveryOrder.CustomerId
+            CustomerId = deliveryOrder.CustomerId,
+            WeightKg = deliveryOrder.WeightKg,
+            LengthCm = deliveryOrder.LengthCm,
+            WidthCm = deliveryOrder.WidthCm,
+            HeightCm = deliveryOrder.HeightCm,
+            OriginPostalCode = deliveryOrder.OriginPostalCode,
+            DestinationPostalCode = deliveryOrder.DestinationPostalCode,
+            BasePrice = deliveryOrder.BasePrice,
+            DistanceSurcharge = deliveryOrder.DistanceSurcharge,
+            SeasonalAdjustment = deliveryOrder.SeasonalAdjustment,
+            TotalPrice = deliveryOrder.TotalPrice
         };
     }
 
     public static DeliveryOrder ToDomain(this DeliveryOrderEntity entity)
     {
-        return new DeliveryOrder(entity.Id, entity.OrderNumber, entity.ScheduledAt, entity.Status, entity.CustomerId)
+        return new DeliveryOrder(
+                entity.Id,
+                entity.OrderNumber,
+                entity.ScheduledAt,
+                entity.Status,
+                entity.CustomerId,
+                entity.WeightKg,
+                entity.LengthCm,
+                entity.WidthCm,
+                entity.HeightCm,
+                entity.OriginPostalCode,
+                entity.DestinationPostalCode)
         {
-            DeliveredAt = entity.DeliveredAt
+            DeliveredAt = entity.DeliveredAt,
+            BasePrice = entity.BasePrice,
+            DistanceSurcharge = entity.DistanceSurcharge,
+            SeasonalAdjustment = entity.SeasonalAdjustment,
+            TotalPrice = entity.TotalPrice
         };
     }
 
