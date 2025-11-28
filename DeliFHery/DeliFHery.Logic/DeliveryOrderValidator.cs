@@ -25,5 +25,20 @@ internal class DeliveryOrderValidator : IEntityValidator<DeliveryOrder>
         {
             throw new ArgumentException("Customer id must be provided", nameof(entity));
         }
+
+        if (entity.WeightKg <= 0)
+        {
+            throw new ArgumentException("Weight must be greater than zero", nameof(entity));
+        }
+
+        if (entity.LengthCm <= 0 || entity.WidthCm <= 0 || entity.HeightCm <= 0)
+        {
+            throw new ArgumentException("Dimensions must be greater than zero", nameof(entity));
+        }
+
+        if (string.IsNullOrWhiteSpace(entity.OriginPostalCode) || string.IsNullOrWhiteSpace(entity.DestinationPostalCode))
+        {
+            throw new ArgumentException("Origin and destination postal codes must be provided", nameof(entity));
+        }
     }
 }

@@ -13,4 +13,8 @@
   <Project Path="DeliFHery.Api.Tests/DeliFHery.Api.Tests.csproj">
     <ProjectReference ProjectPath="DeliFHery.Api/DeliFHery.Api.csproj" />
   </Project>
+  <Project Path="DeliFHery.Logic.Tests/DeliFHery.Logic.Tests.csproj">
+    <ProjectReference ProjectPath="DeliFHery.Logic/DeliFHery.Logic.csproj" />
+    <ProjectReference ProjectPath="DeliFHery.Domain/DeliFHery.Domain.csproj" />
+  </Project>
 </Solution>
