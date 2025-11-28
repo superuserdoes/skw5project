@@ -65,14 +65,15 @@ public class PricingServiceTests
     }
 
     [Fact]
-    public void SeasonalRule_AddsWinterAdjustment()
+    public void SeasonalRule_AppliesDecemberDiscount()
     {
         var order = CreateOrder(scheduleMonth: 12, origin: "10000", destination: "10050");
 
         var breakdown = BuildService().Calculate(order);
 
-        breakdown.SeasonalAdjustment.Should().Be((breakdown.BasePrice + breakdown.DistanceSurcharge) * 0.15m);
-        breakdown.TotalPrice.Should().Be(breakdown.BasePrice + breakdown.DistanceSurcharge + breakdown.SeasonalAdjustment);
+        var subtotal = breakdown.BasePrice + breakdown.DistanceSurcharge;
+        breakdown.SeasonalAdjustment.Should().Be(subtotal * -0.10m);
+        breakdown.TotalPrice.Should().Be(subtotal + breakdown.SeasonalAdjustment);
     }
 
     private static DeliveryOrder CreateOrder(

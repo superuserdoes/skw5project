@@ -5,19 +5,19 @@ namespace DeliFHery.Logic.Pricing.Rules;
 
 /// <summary>
 /// Applies month-based percentage multipliers to the subtotal (base + distance).
+/// Discounts are represented as negative values so peak-season reductions (e.g., December)
+/// lower the quoted price rather than inflating it.
 /// </summary>
 public class SeasonalAdjustmentRule : IPriceRule
 {
     /// <summary>
-    /// Month number to seasonal uplift multiplier (e.g., 0.15 = +15% of subtotal).
-    /// Extend or adjust entries to reflect promotional or peak-period pricing.
+    /// Month number to seasonal adjustment multiplier. Negative entries represent discounts,
+    /// e.g., -0.10 for a 10% reduction during December promotions. Extend or adjust this map
+    /// to reflect promotional or peak-period pricing.
     /// </summary>
     public static readonly IReadOnlyDictionary<int, decimal> MonthlyMultipliers = new Dictionary<int, decimal>
     {
-        [12] = 0.15m,
-        [11] = 0.08m,
-        [6] = 0.05m,
-        [7] = 0.05m
+        [12] = -0.10m
     };
 
     public void Apply(DeliveryOrder order, PriceCalculationContext context)
