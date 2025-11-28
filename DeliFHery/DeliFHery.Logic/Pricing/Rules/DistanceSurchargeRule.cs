@@ -8,9 +8,24 @@ namespace DeliFHery.Logic.Pricing.Rules;
 /// </summary>
 public class DistanceSurchargeRule : IPriceRule
 {
+    /// <summary>
+    /// Maximum numeric characters considered from a postal code when estimating distance.
+    /// </summary>
     public const int PostalDigitLimit = 5;
+
+    /// <summary>
+    /// Size of each billing step (in kilometers) used to batch surcharges.
+    /// </summary>
     public const decimal KilometersPerStep = 50m;
+
+    /// <summary>
+    /// Heuristic distance (in kilometers) represented by a single unit difference in the postal prefix.
+    /// </summary>
     public const decimal KilometersPerUnit = 10m;
+
+    /// <summary>
+    /// Surcharge added per distance step when the postal gap exceeds the configured thresholds.
+    /// </summary>
     public const decimal StepSurcharge = 2.5m;
 
     public void Apply(DeliveryOrder order, PriceCalculationContext context)

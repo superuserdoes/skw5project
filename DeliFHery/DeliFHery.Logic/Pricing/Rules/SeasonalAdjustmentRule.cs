@@ -8,6 +8,10 @@ namespace DeliFHery.Logic.Pricing.Rules;
 /// </summary>
 public class SeasonalAdjustmentRule : IPriceRule
 {
+    /// <summary>
+    /// Month number to seasonal uplift multiplier (e.g., 0.15 = +15% of subtotal).
+    /// Extend or adjust entries to reflect promotional or peak-period pricing.
+    /// </summary>
     public static readonly IReadOnlyDictionary<int, decimal> MonthlyMultipliers = new Dictionary<int, decimal>
     {
         [12] = 0.15m,

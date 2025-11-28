@@ -8,11 +8,14 @@ namespace DeliFHery.Logic.Pricing.Rules;
 /// </summary>
 public class WeightPriceRule : IPriceRule
 {
+    /// <summary>
+    /// Divisor used to convert cubic centimeters into kilograms for dimensional weight (industry standard: 5000).
+    /// </summary>
     public const decimal VolumetricDivisor = 5000m;
 
     /// <summary>
-    /// Weight breakpoints (inclusive) and their corresponding prices. Adjust the values to tweak the
-    /// stepped base-pricing strategy without touching rule logic.
+    /// Inclusive weight thresholds (in kg) and their corresponding base prices (in the local currency).
+    /// Adjust these pairs to tune the stepped pricing curve without modifying rule code.
     /// </summary>
     public static readonly (decimal MaxWeightKg, decimal Price)[] WeightBrackets =
     {
@@ -22,6 +25,9 @@ public class WeightPriceRule : IPriceRule
         (20m, 25m)
     };
 
+    /// <summary>
+    /// Flat base price applied when a parcel exceeds the highest configured weight bracket.
+    /// </summary>
     public const decimal OversizePrice = 40m;
 
     public void Apply(DeliveryOrder order, PriceCalculationContext context)
