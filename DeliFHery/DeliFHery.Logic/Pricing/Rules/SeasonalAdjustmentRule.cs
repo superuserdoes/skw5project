@@ -31,9 +31,9 @@ public class SeasonalAdjustmentRule : IPriceRule
             return;
         }
 
-        MonthlyMultipliers.TryGetValue(order.ScheduledAt.Month, out var multiplier);
+        var hasMultiplier = MonthlyMultipliers.TryGetValue(order.ScheduledAt.Month, out var multiplier);
 
-        if (multiplier <= 0)
+        if (!hasMultiplier)
         {
             return;
         }
