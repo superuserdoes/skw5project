@@ -2,6 +2,7 @@ using DeliFHery.Domain;
 using DeliFHery.Persistence;
 using DeliFHery.Persistence.Entities;
 using DeliFHery.Persistence.Mappings;
+using DeliFHery.Logic.Pricing;
 using Microsoft.EntityFrameworkCore;
 
 namespace DeliFHery.Logic;
@@ -12,17 +13,20 @@ public class DeliFHeryLogic : IDeliFHeryLogic
     private readonly IEntityValidator<Customer> _customerValidator;
     private readonly IEntityValidator<DeliveryOrder> _deliveryValidator;
     private readonly IEntityValidator<Contact> _contactValidator;
+    private readonly IPricingService _pricingService;
 
     public DeliFHeryLogic(
         DeliFHeryDbContext dbContext,
         IEntityValidator<Customer> customerValidator,
         IEntityValidator<DeliveryOrder> deliveryValidator,
-        IEntityValidator<Contact> contactValidator)
+        IEntityValidator<Contact> contactValidator,
+        IPricingService pricingService)
     {
         _dbContext = dbContext;
         _customerValidator = customerValidator;
         _deliveryValidator = deliveryValidator;
         _contactValidator = contactValidator;
+        _pricingService = pricingService;
     }
 
     public async Task<IEnumerable<Customer>> GetCustomersAsync()
@@ -121,11 +125,27 @@ public class DeliFHeryLogic : IDeliFHeryLogic
         return entity?.ToDomain();
     }
 
+    public Task<PriceBreakdown> CalculateDeliveryPriceAsync(DeliveryOrder deliveryOrder)
+    {
+        if (deliveryOrder.CustomerId == Guid.Empty)
+        {
+            deliveryOrder.CustomerId = Guid.NewGuid();
+        }
+
+        _deliveryValidator.EnsureValid(deliveryOrder);
+        var breakdown = _pricingService.Calculate(deliveryOrder);
+        ApplyBreakdown(deliveryOrder, breakdown);
+        return Task.FromResult(breakdown);
+    }
+
     public async Task AddDeliveryForCustomerAsync(Guid customerId, DeliveryOrder deliveryOrder)
     {
         await EnsureCustomerAsync(customerId);
         deliveryOrder.CustomerId = customerId;
         _deliveryValidator.EnsureValid(deliveryOrder);
+
+        var breakdown = _pricingService.Calculate(deliveryOrder);
+        ApplyBreakdown(deliveryOrder, breakdown);
 
         if (deliveryOrder.Id == Guid.Empty)
         {
@@ -141,12 +161,24 @@ public class DeliFHeryLogic : IDeliFHeryLogic
     public async Task UpdateDeliveryAsync(DeliveryOrder deliveryOrder)
     {
         _deliveryValidator.EnsureValid(deliveryOrder);
+        var breakdown = _pricingService.Calculate(deliveryOrder);
+        ApplyBreakdown(deliveryOrder, breakdown);
         var entity = await EnsureDeliveryAsync(deliveryOrder.Id);
         entity.OrderNumber = deliveryOrder.OrderNumber;
         entity.ScheduledAt = deliveryOrder.ScheduledAt;
         entity.DeliveredAt = deliveryOrder.DeliveredAt;
         entity.Status = deliveryOrder.Status;
         entity.CustomerId = deliveryOrder.CustomerId;
+        entity.WeightKg = deliveryOrder.WeightKg;
+        entity.LengthCm = deliveryOrder.LengthCm;
+        entity.WidthCm = deliveryOrder.WidthCm;
+        entity.HeightCm = deliveryOrder.HeightCm;
+        entity.OriginPostalCode = deliveryOrder.OriginPostalCode;
+        entity.DestinationPostalCode = deliveryOrder.DestinationPostalCode;
+        entity.BasePrice = deliveryOrder.BasePrice;
+        entity.DistanceSurcharge = deliveryOrder.DistanceSurcharge;
+        entity.SeasonalAdjustment = deliveryOrder.SeasonalAdjustment;
+        entity.TotalPrice = deliveryOrder.TotalPrice;
 
         await _dbContext.SaveChangesAsync();
     }
@@ -251,6 +283,14 @@ public class DeliFHeryLogic : IDeliFHeryLogic
         {
             throw new ArgumentException($"Delivery with id {deliveryId} already exists");
         }
+    }
+
+    private static void ApplyBreakdown(DeliveryOrder deliveryOrder, PriceBreakdown breakdown)
+    {
+        deliveryOrder.BasePrice = breakdown.BasePrice;
+        deliveryOrder.DistanceSurcharge = breakdown.DistanceSurcharge;
+        deliveryOrder.SeasonalAdjustment = breakdown.SeasonalAdjustment;
+        deliveryOrder.TotalPrice = breakdown.TotalPrice;
     }
 
     private async Task EnsureContactDoesNotExist(Guid contactId)
