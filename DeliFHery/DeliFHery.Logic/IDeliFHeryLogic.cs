@@ -1,4 +1,5 @@
 using DeliFHery.Domain;
+using DeliFHery.Logic.Pricing;
 
 namespace DeliFHery.Logic;
 
@@ -14,6 +15,7 @@ public interface IDeliFHeryLogic
     Task<IEnumerable<DeliveryOrder>> GetDeliveriesAsync();
     Task<IEnumerable<DeliveryOrder>> GetDeliveriesForCustomerAsync(Guid customerId);
     Task<DeliveryOrder?> GetDeliveryAsync(Guid deliveryId);
+    Task<PriceBreakdown> CalculateDeliveryPriceAsync(DeliveryOrder deliveryOrder);
     Task AddDeliveryForCustomerAsync(Guid customerId, DeliveryOrder deliveryOrder);
     Task UpdateDeliveryAsync(DeliveryOrder deliveryOrder);
     Task<bool> DeleteDeliveryAsync(Guid deliveryId);

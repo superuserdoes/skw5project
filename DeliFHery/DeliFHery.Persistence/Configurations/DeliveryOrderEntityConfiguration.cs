@@ -21,6 +21,35 @@ internal class DeliveryOrderEntityConfiguration : IEntityTypeConfiguration<Deliv
 
         builder.Property(d => d.ScheduledAt).IsRequired();
 
+        builder.Property(d => d.WeightKg)
+            .HasPrecision(9, 2)
+            .IsRequired();
+
+        builder.Property(d => d.LengthCm)
+            .HasPrecision(9, 2)
+            .IsRequired();
+
+        builder.Property(d => d.WidthCm)
+            .HasPrecision(9, 2)
+            .IsRequired();
+
+        builder.Property(d => d.HeightCm)
+            .HasPrecision(9, 2)
+            .IsRequired();
+
+        builder.Property(d => d.OriginPostalCode)
+            .HasMaxLength(32)
+            .IsRequired();
+
+        builder.Property(d => d.DestinationPostalCode)
+            .HasMaxLength(32)
+            .IsRequired();
+
+        builder.Property(d => d.BasePrice).HasPrecision(10, 2);
+        builder.Property(d => d.DistanceSurcharge).HasPrecision(10, 2);
+        builder.Property(d => d.SeasonalAdjustment).HasPrecision(10, 2);
+        builder.Property(d => d.TotalPrice).HasPrecision(10, 2);
+
         builder.HasData(
             new DeliveryOrderEntity
             {
@@ -28,7 +57,17 @@ internal class DeliveryOrderEntityConfiguration : IEntityTypeConfiguration<Deliv
                 OrderNumber = "ORD-1000",
                 ScheduledAt = SeedData.OrchardMorningSchedule,
                 Status = DeliveryStatus.Created,
-                CustomerId = SeedData.OrchardMarketCustomerId
+                CustomerId = SeedData.OrchardMarketCustomerId,
+                WeightKg = 2.5m,
+                LengthCm = 30,
+                WidthCm = 20,
+                HeightCm = 10,
+                OriginPostalCode = "94103",
+                DestinationPostalCode = "94107",
+                BasePrice = 10m,
+                DistanceSurcharge = 2.5m,
+                SeasonalAdjustment = 0,
+                TotalPrice = 12.5m
             },
             new DeliveryOrderEntity
             {
@@ -36,7 +75,17 @@ internal class DeliveryOrderEntityConfiguration : IEntityTypeConfiguration<Deliv
                 OrderNumber = "ORD-2000",
                 ScheduledAt = SeedData.CityLunchSchedule,
                 Status = DeliveryStatus.Created,
-                CustomerId = SeedData.CityBakeryCustomerId
+                CustomerId = SeedData.CityBakeryCustomerId,
+                WeightKg = 6.2m,
+                LengthCm = 40,
+                WidthCm = 25,
+                HeightCm = 15,
+                OriginPostalCode = "94016",
+                DestinationPostalCode = "94501",
+                BasePrice = 15m,
+                DistanceSurcharge = 7.5m,
+                SeasonalAdjustment = 0,
+                TotalPrice = 22.5m
             });
     }
 }

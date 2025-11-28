@@ -22,6 +22,32 @@ public class DeliveryOrderEntity
 
     public Guid CustomerId { get; set; }
 
+    public decimal WeightKg { get; set; }
+
+    public decimal LengthCm { get; set; }
+
+    public decimal WidthCm { get; set; }
+
+    public decimal HeightCm { get; set; }
+
+    [MaxLength(32)]
+    public string OriginPostalCode { get; set; } = string.Empty;
+
+    [MaxLength(32)]
+    public string DestinationPostalCode { get; set; } = string.Empty;
+
+    [Column(TypeName = "numeric(10,2)")]
+    public decimal BasePrice { get; set; }
+
+    [Column(TypeName = "numeric(10,2)")]
+    public decimal DistanceSurcharge { get; set; }
+
+    [Column(TypeName = "numeric(10,2)")]
+    public decimal SeasonalAdjustment { get; set; }
+
+    [Column(TypeName = "numeric(10,2)")]
+    public decimal TotalPrice { get; set; }
+
     [ForeignKey(nameof(CustomerId))]
     public CustomerEntity? Customer { get; set; }
 }
